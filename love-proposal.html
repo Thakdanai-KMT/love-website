@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>เซอร์ไพรส์เพื่อเธอ 💖</title>
+  <style>
+    /* ============================================================
+       BASE & RESET
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink-bg:    #fff0f5;
+      --pink-mid:   #ffd6e7;
+      --pink-dark:  #ffb3cc;
+      --pink-deep:  #ff85a1;
+      --red:        #ff4d6d;
+      --white:      #ffffff;
+      --text-main:  #c2185b;
+      --text-sub:   #e91e8c;
+      --shadow:     0 8px 32px rgba(255,105,180,0.25);
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--pink-bg);
+      color: var(--text-main);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* ============================================================
+       SCREENS — only one visible at a time
+    ============================================================ */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+      overflow: hidden;
+    }
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ============================================================
+       FLOATING HEARTS (shared)
+    ============================================================ */
+    .hearts-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .heart-float {
+      position: absolute;
+      bottom: -60px;
+      font-size: 1.4rem;
+      opacity: 0;
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0) scale(0.8) rotate(-10deg); opacity: 0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.5; }
+      100% { transform: translateY(-110vh) scale(1.2) rotate(10deg); opacity: 0; }
+    }
+
+    /* ============================================================
+       1. LOADING SCREEN
+    ============================================================ */
+    #screen-loading {
+      background: linear-gradient(160deg, #ffe0ec 0%, #ffd6e7 50%, #ffb3cc 100%);
+    }
+    .loading-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.8rem;
+    }
+    .loading-emoji {
+      font-size: 4.5rem;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.18); }
+    }
+    .loading-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.5;
+      letter-spacing: 0.02em;
+    }
+    .loading-sub {
+      font-size: 0.95rem;
+      color: #e91e8c;
+      opacity: 0.8;
+    }
+
+    /* Progress bar */
+    .progress-wrap {
+      width: min(280px, 75vw);
+      height: 10px;
+      background: rgba(255,255,255,0.55);
+      border-radius: 99px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(255,100,150,0.2);
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--pink-deep), var(--red));
+      border-radius: 99px;
+      transition: width 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: rgba(255,255,255,0.4);
+      animation: shimmer 1s linear infinite;
+    }
+    @keyframes shimmer {
+      to { left: 200%; }
+    }
+    .progress-percent {
+      font-size: 0.88rem;
+      color: var(--red);
+      font-weight: 600;
+      margin-top: -0.4rem;
+    }
+
+    /* ============================================================
+       2. PROPOSAL SCREEN
+    ============================================================ */
+    #screen-proposal {
+      background: linear-gradient(160deg, #fff5f8 0%, #ffe4ef 100%);
+    }
+    .proposal-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.4rem;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* Cartoon couple SVG area */
+    .cartoon-wrap {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      transition: all 0.4s ease;
+    }
+    .cartoon-svg {
+      width: 100%;
+      height: 100%;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Headline */
+    .proposal-title {
+      font-size: clamp(1.8rem, 7vw, 2.4rem);
+      font-weight: 800;
+      color: var(--red);
+      letter-spacing: 0.01em;
+      line-height: 1.3;
+      text-shadow: 0 2px 12px rgba(255,80,120,0.18);
+    }
+    .proposal-sub {
+      font-size: 1rem;
+      color: #e91e8c;
+      font-weight: 500;
+      opacity: 0.9;
+      transition: all 0.4s ease;
+      min-height: 1.5em;
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      width: 100%;
+      align-items: center;
+      margin-top: 0.4rem;
+    }
+    .btn {
+      border: none;
+      border-radius: 99px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 0.85rem 2.2rem;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, font-size 0.4s ease, padding 0.4s ease;
+      letter-spacing: 0.03em;
+      min-width: 180px;
+    }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-yes {
+      background: linear-gradient(135deg, #4caf50, #2e7d32);
+      color: white;
+      box-shadow: 0 6px 24px rgba(76,175,80,0.35);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, font-size 0.5s ease, padding 0.5s ease, width 0.5s ease;
+    }
+    .btn-yes:hover { transform: scale(1.04); box-shadow: 0 8px 30px rgba(76,175,80,0.45); }
+
+    .btn-no {
+      background: linear-gradient(135deg, #ef5350, #c62828);
+      color: white;
+      box-shadow: 0 6px 24px rgba(239,83,80,0.35);
+      position: absolute; /* will be moved on reject */
+    }
+    .btn-no-wrapper {
+      position: relative;
+      width: 100%;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* bounce animation for yes button */
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      30%  { transform: scale(1.12); }
+      60%  { transform: scale(0.96); }
+    }
+    .btn-yes.bouncing { animation: bounce 0.5s ease; }
+
+    /* ============================================================
+       3. ACCEPTED SCREEN
+    ============================================================ */
+    #screen-accepted {
+      background: linear-gradient(160deg, #ffe0ec 0%, #ffc2d4 100%);
+      overflow: hidden;
+    }
+    .accepted-inner {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .accepted-emoji {
+      font-size: 5rem;
+      animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes popIn {
+      0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    .accepted-title {
+      font-size: clamp(1.6rem, 6.5vw, 2.2rem);
+      font-weight: 800;
+      color: var(--red);
+      line-height: 1.4;
+    }
+
+    /* confetti canvas */
+    #confetti-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ============================================================
+       4. VIDEO SCREEN
+    ============================================================ */
+    #screen-video {
+      background: #1a0a10;
+    }
+    .video-bg-blur {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, #3d0028, #1a0010);
+      filter: blur(0);
+      z-index: 0;
+    }
+    .video-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+      padding: 1.2rem 1rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    .video-label {
+      font-size: 0.95rem;
+      color: #ffb3cc;
+      font-weight: 600;
+      text-align: center;
+      letter-spacing: 0.03em;
+    }
+    .video-container {
+      width: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 50px rgba(255,80,130,0.4);
+      background: #000;
+      aspect-ratio: 9/16;
+      max-height: 62vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #video-player {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none; /* shown when src added */
+    }
+    .video-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      color: #ff85a1;
+      font-size: 0.9rem;
+      padding: 2rem;
+      text-align: center;
+    }
+    .video-placeholder-icon { font-size: 3.5rem; }
+    .btn-replay {
+      background: linear-gradient(135deg, var(--pink-deep), var(--red));
+      color: white;
+      border: none;
+      border-radius: 99px;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.8rem 2rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.18s;
+    }
+    .btn-replay:active { transform: scale(0.96); }
+    .cartoon-img{
+  width: 250px;
+  height: auto;
+  display: block;
+  margin: auto;
+   position: relative;
+  top: -230px;   /* ขยับขึ้น */
+  left: -30px;  /* ขยับซ้าย */
+}
+/*  */
+    /* ============================================================
+       EXTRA FLOATING HEARTS (proposal reject phase 2)
+    ============================================================ */
+    .extra-hearts { display: none; }
+    .extra-hearts.show { display: block; }
+
+    /* ============================================================
+       RESPONSIVE FINE-TUNING
+       iPhone SE / small phones
+    ============================================================ */
+    @media (max-height: 680px) {
+      .cartoon-wrap { width: 160px; height: 160px; }
+      .proposal-inner { gap: 1rem; }
+      .loading-emoji { font-size: 3.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     FLOATING HEARTS LAYER (shared)
+============================================================ -->
+<div class="hearts-bg" id="hearts-bg">
+  <!-- Generated by JS -->
+</div>
+
+<!-- ============================================================
+     SCREEN 1: LOADING
+============================================================ -->
+<div class="screen active" id="screen-loading">
+  <div class="loading-inner">
+    <div class="loading-emoji">💖</div>
+    <div>
+      <div class="loading-title">กำลังเตรียมเซอร์ไพรส์<br>ให้เธอ ❤️</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="progress-percent" id="progress-percent">0%</div>
+    <div class="loading-sub">รอแป๊บนึงนะ...</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 2: PROPOSAL
+============================================================ -->
+<div class="screen" id="screen-proposal">
+  <div class="proposal-inner">
+
+    <!-- Cartoon SVG area — 3 states: normal, pleading, wink -->
+    <div class="cartoon-wrap" id="cartoon-wrap">
+      <!-- STATE 0: happy couple default -->
+<div class="cartoon-wrap" id="cartoon-wrap">
+  <img
+    id="cartoon-0"
+    class="cartoon-img"
+    src="/S__31186951.jpg"
+    alt="couple"
+  >
+</div>
+
+      <!-- STATE 1: pleading (sad face) -->
+      <svg id="cartoon-1" class="cartoon-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <circle cx="100" cy="100" r="90" fill="#ffe0ec"/>
+        <!-- face -->
+        <circle cx="100" cy="90" r="38" fill="#ffccaa"/>
+        <!-- sad eyes with tears -->
+        <circle cx="87" cy="84" r="5" fill="#333"/>
+        <circle cx="113" cy="84" r="5" fill="#333"/>
+        <!-- teardrop -->
+        <ellipse cx="87" cy="97" rx="3" ry="5" fill="#aad4ff" opacity="0.8"/>
+        <ellipse cx="113" cy="97" rx="3" ry="5" fill="#aad4ff" opacity="0.8"/>
+        <!-- sad mouth -->
+        <path d="M88 103 Q100 97 112 103" stroke="#c06060" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- eyebrows sad -->
+        <path d="M82 77 Q87 74 92 77" stroke="#5a3a1a" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M108 77 Q113 74 118 77" stroke="#5a3a1a" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- pleading hands -->
+        <text x="100" y="158" font-size="32" text-anchor="middle">🥺</text>
+      </svg>
+
+      <!-- STATE 2: wink / uwu -->
+      <svg id="cartoon-2" class="cartoon-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <circle cx="100" cy="100" r="90" fill="#ffe0ec"/>
+        <circle cx="100" cy="90" r="38" fill="#ffccaa"/>
+        <!-- wink left eye -->
+        <path d="M83 83 Q87 79 91 83" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- sparkle right eye -->
+        <circle cx="113" cy="84" r="5" fill="#333"/>
+        <circle cx="115" cy="82" r="2" fill="white"/>
+        <!-- big smile -->
+        <path d="M87 99 Q100 112 113 99" stroke="#c06060" stroke-width="2.5" fill="#ffb3b3" stroke-linecap="round"/>
+        <!-- blush -->
+        <ellipse cx="82" cy="97" rx="9" ry="5" fill="#ffaac0" opacity="0.5"/>
+        <ellipse cx="118" cy="97" rx="9" ry="5" fill="#ffaac0" opacity="0.5"/>
+        <text x="100" y="158" font-size="32" text-anchor="middle">✨</text>
+      </svg>
+
+      <!-- STATE 3: shy smile -->
+      <svg id="cartoon-3" class="cartoon-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <circle cx="100" cy="100" r="90" fill="#ffe0ec"/>
+        <circle cx="100" cy="90" r="38" fill="#ffccaa"/>
+        <!-- closed happy eyes -->
+        <path d="M83 83 Q87 79 91 83" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M109 83 Q113 79 117 83" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- big smile + teeth -->
+        <path d="M87 99 Q100 114 113 99" stroke="#c06060" stroke-width="2.5" fill="#ffe0e0" stroke-linecap="round"/>
+        <!-- heavy blush -->
+        <ellipse cx="80" cy="97" rx="11" ry="7" fill="#ff8fab" opacity="0.45"/>
+        <ellipse cx="120" cy="97" rx="11" ry="7" fill="#ff8fab" opacity="0.45"/>
+        <!-- hand covering mouth -->
+        <text x="100" y="158" font-size="30" text-anchor="middle">😘</text>
+      </svg>
+    </div>
+
+    <div class="proposal-title">เป็นแฟนกันนะ ❤️</div>
+    <!-- <div class="proposal-sub" id="proposal-sub">เค้าอยากดูแลเธอไปนาน ๆ</div> -->
+
+    <!-- YES button -->
+    <button class="btn btn-yes" id="btn-yes" onclick="handleYes()">ตกลง 💖</button>
+
+    <!-- NO button wrapper (for positioning) -->
+    <div class="btn-no-wrapper" id="btn-no-wrapper">
+      <button class="btn btn-no" id="btn-no" onclick="handleNo()">ปฏิเสธ 😢</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 3: ACCEPTED 💖
+============================================================ -->
+<div class="screen" id="screen-accepted">
+  <canvas id="confetti-canvas"></canvas>
+  <div class="accepted-inner">
+    <div class="accepted-emoji">❤️</div>
+    <div class="accepted-title">เย้~ จากนี้เราเป็น<br>แฟนกันแล้ว ❤️</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 4: VIDEO 🎬
+============================================================ -->
+<div class="screen" id="screen-video">
+  <div class="video-bg-blur"></div>
+  <div class="video-inner">
+    <div class="video-label">วิดีโอนี้ตั้งใจทำเพื่อที่รักคนเดียว ❤️</div>
+    <div class="video-container">
+      <!-- Replace src with your MP4 path to activate video -->
+      <video id="video-player" controls playsinline>
+        <source src="/istockphoto-901950710-640_adpp_is.mp4" type="video/mp4">
+      </video>
+      <div class="video-placeholder" id="video-placeholder">
+        <div class="video-placeholder-icon">🎬</div>
+        <div>วิดีโอสำหรับที่รักโดยเฉพาะ</div>
+        <div style="font-size:0.78rem;opacity:0.7">เพิ่มไฟล์ .mp4 ในโค้ด (src="")</div>
+      </div>
+    </div>
+    <button class="btn-replay" onclick="replayVideo()">▶ เล่นซ้ำ</button>
+  </div>
+</div>
+
+
+<script>
+/* ============================================================
+   FLOATING HEARTS GENERATOR
+============================================================ */
+(function spawnHearts() {
+  const container = document.getElementById('hearts-bg');
+  const emojis = ['💕','💗','💖','💓','💞','🌸','✨'];
+  for (let i = 0; i < 18; i++) {
+    const h = document.createElement('span');
+    h.className = 'heart-float';
+    h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    h.style.left       = Math.random() * 100 + 'vw';
+    h.style.fontSize   = (0.9 + Math.random() * 1.2) + 'rem';
+    h.style.animationDuration = (6 + Math.random() * 8) + 's';
+    h.style.animationDelay    = (Math.random() * 8) + 's';
+    h.style.opacity = '0';
+    container.appendChild(h);
+  }
+})();
+
+/* ============================================================
+   SCREEN SWITCHER
+============================================================ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ============================================================
+   1. LOADING SCREEN ANIMATION
+============================================================ */
+(function startLoading() {
+  const bar  = document.getElementById('progress-bar');
+  const pct  = document.getElementById('progress-percent');
+  let progress = 0;
+
+  // randomised increments for natural feel
+  const steps = [
+    { target: 30,  delay: 300  },
+    { target: 55,  delay: 600  },
+    { target: 75,  delay: 900  },
+    { target: 90,  delay: 1200 },
+    { target: 100, delay: 2000 },
+  ];
+
+  steps.forEach(({ target, delay }) => {
+    setTimeout(() => {
+      bar.style.width  = target + '%';
+      pct.textContent  = target + '%';
+      if (target === 100) {
+        setTimeout(() => showScreen('screen-proposal'), 600);
+      }
+    }, delay);
+  });
+})();
+
+/* ============================================================
+   2. PROPOSAL — REJECT LOGIC
+============================================================ */
+let rejectCount = 0;
+
+const messages = [
+  'เค้าอยากดูแลเธอไปนาน ๆ',     // default
+  'แน่ใจหรอออ 🥺',               // reject 1
+  'ลองคิดดูอีกทีน้า ❤️',         // reject 2
+  'เค้าเลือกให้ไม่ได้แล้วน้า 😘', // reject 3
+];
+
+const cartoonStates = ['cartoon-0','cartoon-1','cartoon-2','cartoon-3'];
+
+function setCartoon(state) {
+  cartoonStates.forEach((id, i) => {
+    document.getElementById(id).style.display = i === state ? 'block' : 'none';
+  });
+}
+
+function handleNo() {
+  rejectCount++;
+  const sub     = document.getElementById('proposal-sub');
+  const btnYes  = document.getElementById('btn-yes');
+  const btnNo   = document.getElementById('btn-no');
+  const wrapper = document.getElementById('btn-no-wrapper');
+
+  // grow YES button
+  const scales = [1, 1.2, 1.45, 1.75];
+  const yesScale = scales[Math.min(rejectCount, 3)];
+  btnYes.style.transform = `scale(${yesScale})`;
+  btnYes.style.fontSize  = (1.05 * yesScale) + 'rem';
+
+  // bounce YES button
+  btnYes.classList.remove('bouncing');
+  void btnYes.offsetWidth; // reflow
+  btnYes.classList.add('bouncing');
+
+  if (rejectCount === 1) {
+    sub.textContent = messages[1];
+    setCartoon(1);
+    // move NO button randomly within wrapper bounds
+    moveNoButton(btnNo, wrapper);
+
+  } else if (rejectCount === 2) {
+    sub.textContent = messages[2];
+    setCartoon(2);
+    moveNoButton(btnNo, wrapper);
+    // extra floating hearts burst
+    burstHearts(12);
+
+  } else {
+    // 3rd+ press: hide NO button
+    sub.textContent = messages[3];
+    setCartoon(3);
+    btnNo.style.opacity    = '0';
+    btnNo.style.pointerEvents = 'none';
+    btnNo.style.transform  = 'scale(0)';
+    btnNo.style.transition = 'all 0.4s ease';
+  }
+}
+
+function moveNoButton(btn, wrapper) {
+  const ww = window.innerWidth;
+  const wh = window.innerHeight;
+  const bw = 180; const bh = 50;
+  const maxX = Math.max(0, ww - bw - 20);
+  const maxY = Math.max(0, wh - bh - 20);
+  const rx = Math.floor(Math.random() * maxX) + 10;
+  const ry = Math.floor(Math.random() * maxY) + 10;
+  btn.style.position = 'fixed';
+  btn.style.left = rx + 'px';
+  btn.style.top  = ry + 'px';
+  btn.style.zIndex = 999;
+}
+
+function burstHearts(count) {
+  const container = document.getElementById('hearts-bg');
+  const emojis = ['💕','💖','💗','💓','❤️','🌸'];
+  for (let i = 0; i < count; i++) {
+    const h = document.createElement('span');
+    h.className = 'heart-float';
+    h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    h.style.left = Math.random() * 100 + 'vw';
+    h.style.fontSize = (1.2 + Math.random() * 1.5) + 'rem';
+    h.style.animationDuration = (4 + Math.random() * 4) + 's';
+    h.style.animationDelay = (Math.random() * 1.5) + 's';
+    container.appendChild(h);
+    setTimeout(() => h.remove(), 8000);
+  }
+}
+
+/* ============================================================
+   3. ACCEPTED — Confetti + Transition to Video
+============================================================ */
+function handleYes() {
+  showScreen('screen-accepted');
+  launchConfetti();
+  burstHearts(20);
+  // play sound (if browser allows)
+  tryPlaySound();
+  // go to video after 3.5s
+  setTimeout(() => showScreen('screen-video'), 3500);
+}
+
+/* --- Confetti engine --- */
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = [];
+  const colors = ['#ff4d6d','#ff85a1','#ffb3cc','#ffd6e7','#ff69b4','#ffe066','#b5ead7'];
+
+  for (let i = 0; i < 160; i++) {
+    pieces.push({
+      x:    Math.random() * canvas.width,
+      y:    Math.random() * canvas.height - canvas.height,
+      w:    6 + Math.random() * 8,
+      h:    4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx:   (Math.random() - 0.5) * 3,
+      vy:   2 + Math.random() * 3,
+      rot:  Math.random() * Math.PI * 2,
+      vr:   (Math.random() - 0.5) * 0.15,
+    });
+  }
+
+  let frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.rot += p.vr;
+      if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+    });
+    frame = requestAnimationFrame(draw);
+  }
+  draw();
+  setTimeout(() => cancelAnimationFrame(frame), 3400);
+}
+
+/* --- Simple tone via Web Audio --- */
+function tryPlaySound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.15);
+      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + i * 0.15 + 0.05);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.15 + 0.3);
+      osc.start(ctx.currentTime + i * 0.15);
+      osc.stop(ctx.currentTime + i * 0.15 + 0.35);
+    });
+  } catch(e) { /* silence if blocked */ }
+}
+
+/* ============================================================
+   4. VIDEO SCREEN
+============================================================ */
+function replayVideo() {
+  const v = document.getElementById('video-player');
+  if (v.src && v.src !== window.location.href) {
+    v.currentTime = 0;
+    v.play().catch(() => {});
+  }
+}
+
+// Auto-show video element if src is set
+(function checkVideo() {
+  const v = document.getElementById('video-player');
+  const ph = document.getElementById('video-placeholder');
+  if (v.querySelector('source').src && v.querySelector('source').src !== window.location.href) {
+    v.style.display = 'block';
+    ph.style.display = 'none';
+  }
+})();
+</script>
+</body>
+</html>
